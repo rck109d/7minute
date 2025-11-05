@@ -25,5 +25,14 @@
   </head>
   <body>
     <h1>Hello World</h1>
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          const utterance = new SpeechSynthesisUtterance("Hello World");
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }, 1000);
+      });
+    </script>
   </body>
 </html>

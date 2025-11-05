@@ -39,61 +39,17 @@
         setStatus(message, true);
       };
 
-      const speak = () => {
+      const startSpeech = () => {
         const utterance = new SpeechSynthesisUtterance("Hello World");
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length) {
-          utterance.voice = voices.find((voice) => voice.default) || voices[0];
-        }
-        window.speechSynthesis.cancel();
-        try {
-          window.speechSynthesis.speak(utterance);
-          setStatus("Speech playback started.");
-          return true;
-        } catch (error) {
-          setError(`Unable to start speech: ${error}`);
-          return false;
-        }
-      };
 
-      const trySpeakWhenVoicesReady = () => {
-        if (!window.speechSynthesis.getVoices().length) {
-          return false;
-        }
-
-        return speak();
-      };
-
-      const scheduleVoicePolling = () => {
-        const pollInterval = 250;
-        const pollTimeout = 5000;
-        let elapsed = 0;
-
-        const poll = () => {
-          elapsed += pollInterval;
-          if (trySpeakWhenVoicesReady()) {
-            clearInterval(intervalId);
-            return;
-          }
-
-          if (elapsed >= pollTimeout) {
-            clearInterval(intervalId);
-            setError("Timed out waiting for speech synthesis voices.");
-          }
+        utterance.onstart = () => setStatus("Speech playback started.");
+        utterance.onend = () => setStatus("Speech playback finished.");
+        utterance.onerror = (event) => {
+          setError(`Speech synthesis error: ${event.error || "unknown"}`);
         };
 
-        const intervalId = setInterval(poll, pollInterval);
-        poll();
-      };
-
-      const handleVoicesChanged = () => {
-        window.speechSynthesis.removeEventListener(
-          "voiceschanged",
-          handleVoicesChanged
-        );
-        if (!speak()) {
-          setError("Speech synthesis failed after voices changed event.");
-        }
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       };
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -102,15 +58,17 @@
           return;
         }
 
-        setStatus("Waiting for speech synthesis voices...");
-        if (!trySpeakWhenVoicesReady()) {
-          window.speechSynthesis.addEventListener(
-            "voiceschanged",
-            handleVoicesChanged
-          );
-          scheduleVoicePolling();
-          setStatus("Waiting for voices to load...");
-        }
+        setStatus("Preparing speech playback...");
+
+        setTimeout(() => {
+          try {
+            startSpeech();
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error ?? "unknown error");
+            setError(`Unable to start speech: ${message}`);
+          }
+        }, 1000);
       });
     </script>
   </body>

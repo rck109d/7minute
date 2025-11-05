@@ -25,36 +25,52 @@
   </head>
   <body>
     <h1>Hello World</h1>
+    <p id="status" role="status" aria-live="polite"></p>
     <script>
-      window.addEventListener("load", () => {
-        const speak = () => {
-          const utterance = new SpeechSynthesisUtterance("Hello World");
-          const voices = window.speechSynthesis.getVoices();
-          if (voices.length) {
-            utterance.voice =
-              voices.find((voice) => voice.default) || voices[0];
-          }
-          window.speechSynthesis.cancel();
-          window.speechSynthesis.speak(utterance);
-        };
+      const statusEl = document.getElementById("status");
+      const setStatus = (message, isError = false) => {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? "crimson" : "";
+      };
 
-        const handleVoicesChanged = () => {
-          window.speechSynthesis.removeEventListener(
-            "voiceschanged",
-            handleVoicesChanged
-          );
-          speak();
-        };
+      const setError = (message) => {
+        console.error(message);
+        setStatus(message, true);
+      };
 
-        window.speechSynthesis.addEventListener(
-          "voiceschanged",
-          handleVoicesChanged
-        );
-
-        const availableVoices = window.speechSynthesis.getVoices();
-        if (availableVoices.length) {
-          handleVoicesChanged();
+      const speak = () => {
+        const utterance = new SpeechSynthesisUtterance("Hello World");
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length) {
+          utterance.voice = voices[0];
         }
+
+        utterance.onstart = () => setStatus("Speech playback started.");
+        utterance.onend = () => setStatus("Speech playback finished.");
+        utterance.onerror = (event) => {
+          setError(`Speech synthesis error: ${event.error || "unknown"}`);
+        };
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        if (!("speechSynthesis" in window)) {
+          setError("Speech synthesis is not supported in this browser.");
+          return;
+        }
+
+        setStatus("Preparing speech playback...");
+
+        setTimeout(() => {
+          try {
+            speak();
+          } catch (error) {
+            setError(`Unable to start speech: ${error}`);
+          }
+        }, 1000);
       });
     </script>
   </body>

@@ -38,22 +38,22 @@
           window.speechSynthesis.speak(utterance);
         };
 
-        const availableVoices = window.speechSynthesis.getVoices();
-        if (availableVoices.length) {
-          speak();
-        } else {
-          const handleVoicesChanged = () => {
-            window.speechSynthesis.removeEventListener(
-              "voiceschanged",
-              handleVoicesChanged
-            );
-            speak();
-          };
-
-          window.speechSynthesis.addEventListener(
+        const handleVoicesChanged = () => {
+          window.speechSynthesis.removeEventListener(
             "voiceschanged",
             handleVoicesChanged
           );
+          speak();
+        };
+
+        window.speechSynthesis.addEventListener(
+          "voiceschanged",
+          handleVoicesChanged
+        );
+
+        const availableVoices = window.speechSynthesis.getVoices();
+        if (availableVoices.length) {
+          handleVoicesChanged();
         }
       });
     </script>

@@ -24,10 +24,11 @@
     </style>
   </head>
   <body>
-    <h1>Hello World</h1>
+    <button id="speakButton" type="button">Speak Hello World</button>
     <p id="status" role="status" aria-live="polite"></p>
     <script>
       const statusEl = document.getElementById("status");
+      const speakButton = document.getElementById("speakButton");
       const setStatus = (message, isError = false) => {
         if (!statusEl) return;
         statusEl.textContent = message;
@@ -39,13 +40,29 @@
         setStatus(message, true);
       };
 
+      const setButtonEnabled = (enabled) => {
+        if (!speakButton) return;
+        speakButton.disabled = !enabled;
+      };
+
       const startSpeech = () => {
+        if (!speakButton) {
+          setError("Speak button is missing from the page.");
+          return;
+        }
+
+        setButtonEnabled(false);
         const utterance = new SpeechSynthesisUtterance("Hello World");
 
         utterance.onstart = () => setStatus("Speech playback started.");
-        utterance.onend = () => setStatus("Speech playback finished.");
+        utterance.onend = () => {
+          setStatus("Speech playback finished.");
+          setButtonEnabled(true);
+          speakButton.focus();
+        };
         utterance.onerror = (event) => {
           setError(`Speech synthesis error: ${event.error || "unknown"}`);
+          setButtonEnabled(true);
         };
 
         window.speechSynthesis.cancel();
@@ -53,22 +70,29 @@
       };
 
       document.addEventListener("DOMContentLoaded", () => {
-        if (!("speechSynthesis" in window)) {
-          setError("Speech synthesis is not supported in this browser.");
+        if (!speakButton) {
+          setError("Speak button is missing from the page.");
           return;
         }
 
-        setStatus("Preparing speech playback...");
+        if (!("speechSynthesis" in window)) {
+          setError("Speech synthesis is not supported in this browser.");
+          setButtonEnabled(false);
+          return;
+        }
 
-        setTimeout(() => {
+        setStatus("Press the button to hear 'Hello World'.");
+
+        speakButton.addEventListener("click", () => {
           try {
             startSpeech();
           } catch (error) {
             const message =
               error instanceof Error ? error.message : String(error ?? "unknown error");
             setError(`Unable to start speech: ${message}`);
+            setButtonEnabled(true);
           }
-        }, 1000);
+        });
       });
     </script>
   </body>

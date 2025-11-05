@@ -64,13 +64,45 @@
 
         setStatus("Preparing speech playback...");
 
-        setTimeout(() => {
+        let hasSpoken = false;
+
+        const startSpeech = () => {
+          if (hasSpoken) {
+            return;
+          }
+          hasSpoken = true;
           try {
             speak();
           } catch (error) {
             setError(`Unable to start speech: ${error}`);
           }
-        }, 1000);
+        };
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length) {
+          setTimeout(startSpeech, 1000);
+          return;
+        }
+
+        setStatus("Waiting for available voices...");
+
+        const voicesChangedHandler = () => {
+          setStatus("Voices loaded. Starting speech...");
+          window.speechSynthesis.onvoiceschanged = null;
+          setTimeout(startSpeech, 1000);
+        };
+
+        window.speechSynthesis.onvoiceschanged = voicesChangedHandler;
+
+        setTimeout(() => {
+          if (hasSpoken) {
+            return;
+          }
+
+          window.speechSynthesis.onvoiceschanged = null;
+          setStatus("Using default voice. Starting speech...");
+          startSpeech();
+        }, 4000);
       });
     </script>
   </body>

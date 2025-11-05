@@ -25,35 +25,91 @@
   </head>
   <body>
     <h1>Hello World</h1>
+    <p id="status" role="status" aria-live="polite"></p>
     <script>
-      window.addEventListener("load", () => {
-        const speak = () => {
-          const utterance = new SpeechSynthesisUtterance("Hello World");
-          const voices = window.speechSynthesis.getVoices();
-          if (voices.length) {
-            utterance.voice =
-              voices.find((voice) => voice.default) || voices[0];
-          }
-          window.speechSynthesis.cancel();
+      const statusEl = document.getElementById("status");
+      const setStatus = (message, isError = false) => {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? "crimson" : "";
+      };
+
+      const setError = (message) => {
+        console.error(message);
+        setStatus(message, true);
+      };
+
+      const speak = () => {
+        const utterance = new SpeechSynthesisUtterance("Hello World");
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length) {
+          utterance.voice = voices.find((voice) => voice.default) || voices[0];
+        }
+        window.speechSynthesis.cancel();
+        try {
           window.speechSynthesis.speak(utterance);
+          setStatus("Speech playback started.");
+          return true;
+        } catch (error) {
+          setError(`Unable to start speech: ${error}`);
+          return false;
+        }
+      };
+
+      const trySpeakWhenVoicesReady = () => {
+        if (!window.speechSynthesis.getVoices().length) {
+          return false;
+        }
+
+        return speak();
+      };
+
+      const scheduleVoicePolling = () => {
+        const pollInterval = 250;
+        const pollTimeout = 5000;
+        let elapsed = 0;
+
+        const poll = () => {
+          elapsed += pollInterval;
+          if (trySpeakWhenVoicesReady()) {
+            clearInterval(intervalId);
+            return;
+          }
+
+          if (elapsed >= pollTimeout) {
+            clearInterval(intervalId);
+            setError("Timed out waiting for speech synthesis voices.");
+          }
         };
 
-        const handleVoicesChanged = () => {
-          window.speechSynthesis.removeEventListener(
-            "voiceschanged",
-            handleVoicesChanged
-          );
-          speak();
-        };
+        const intervalId = setInterval(poll, pollInterval);
+        poll();
+      };
 
-        window.speechSynthesis.addEventListener(
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.removeEventListener(
           "voiceschanged",
           handleVoicesChanged
         );
+        if (!speak()) {
+          setError("Speech synthesis failed after voices changed event.");
+        }
+      };
 
-        const availableVoices = window.speechSynthesis.getVoices();
-        if (availableVoices.length) {
-          handleVoicesChanged();
+      document.addEventListener("DOMContentLoaded", () => {
+        if (!("speechSynthesis" in window)) {
+          setError("Speech synthesis is not supported in this browser.");
+          return;
+        }
+
+        setStatus("Waiting for speech synthesis voices...");
+        if (!trySpeakWhenVoicesReady()) {
+          window.speechSynthesis.addEventListener(
+            "voiceschanged",
+            handleVoicesChanged
+          );
+          scheduleVoicePolling();
+          setStatus("Waiting for voices to load...");
         }
       });
     </script>

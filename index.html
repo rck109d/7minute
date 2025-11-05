@@ -27,11 +27,34 @@
     <h1>Hello World</h1>
     <script>
       window.addEventListener("load", () => {
-        setTimeout(() => {
+        const speak = () => {
           const utterance = new SpeechSynthesisUtterance("Hello World");
+          const voices = window.speechSynthesis.getVoices();
+          if (voices.length) {
+            utterance.voice =
+              voices.find((voice) => voice.default) || voices[0];
+          }
           window.speechSynthesis.cancel();
           window.speechSynthesis.speak(utterance);
-        }, 1000);
+        };
+
+        const availableVoices = window.speechSynthesis.getVoices();
+        if (availableVoices.length) {
+          speak();
+        } else {
+          const handleVoicesChanged = () => {
+            window.speechSynthesis.removeEventListener(
+              "voiceschanged",
+              handleVoicesChanged
+            );
+            speak();
+          };
+
+          window.speechSynthesis.addEventListener(
+            "voiceschanged",
+            handleVoicesChanged
+          );
+        }
       });
     </script>
   </body>

@@ -39,12 +39,8 @@
         setStatus(message, true);
       };
 
-      const speak = () => {
+      const startSpeech = () => {
         const utterance = new SpeechSynthesisUtterance("Hello World");
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length) {
-          utterance.voice = voices[0];
-        }
 
         utterance.onstart = () => setStatus("Speech playback started.");
         utterance.onend = () => setStatus("Speech playback finished.");
@@ -64,45 +60,15 @@
 
         setStatus("Preparing speech playback...");
 
-        let hasSpoken = false;
-
-        const startSpeech = () => {
-          if (hasSpoken) {
-            return;
-          }
-          hasSpoken = true;
-          try {
-            speak();
-          } catch (error) {
-            setError(`Unable to start speech: ${error}`);
-          }
-        };
-
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length) {
-          setTimeout(startSpeech, 1000);
-          return;
-        }
-
-        setStatus("Waiting for available voices...");
-
-        const voicesChangedHandler = () => {
-          setStatus("Voices loaded. Starting speech...");
-          window.speechSynthesis.onvoiceschanged = null;
-          setTimeout(startSpeech, 1000);
-        };
-
-        window.speechSynthesis.onvoiceschanged = voicesChangedHandler;
-
         setTimeout(() => {
-          if (hasSpoken) {
-            return;
+          try {
+            startSpeech();
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error ?? "unknown error");
+            setError(`Unable to start speech: ${message}`);
           }
-
-          window.speechSynthesis.onvoiceschanged = null;
-          setStatus("Using default voice. Starting speech...");
-          startSpeech();
-        }, 4000);
+        }, 1000);
       });
     </script>
   </body>

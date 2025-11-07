@@ -69,14 +69,10 @@
         display: none;
       }
       
-      /* Title */
-      .app-title {
-        text-align: center;
-        font-size: clamp(1.75rem, 5vw, 2.5rem);
-        font-weight: 900;
-        color: var(--text-primary);
-        margin: 8px 0;
-        letter-spacing: 0.1em;
+      /* Audio Controls Toggle Button */
+      .audio-toggle {
+        background-color: var(--bg-secondary);
+        color: white;
       }
       
       /* Audio Controls (Voice & Volume) */
@@ -184,6 +180,48 @@
         flex-wrap: wrap;
       }
       
+      /* Workout Status Display */
+      .workout-status {
+        display: flex;
+        justify-content: center;
+        margin: 6px 0;
+        min-height: 60px;
+      }
+      
+      .status-display {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .timer-display {
+        font-size: clamp(2rem, 6vw, 3rem);
+        font-weight: 700;
+        line-height: 1.2;
+        min-width: 80px;
+        text-align: center;
+      }
+      
+      .timer-display.exercise { color: var(--color-ready-text); }
+      .timer-display.rest { color: var(--color-rest-text); }
+      .timer-display.ready { color: var(--color-rest-text); }
+      .timer-display.paused { color: var(--color-paused); }
+      
+      .status-badge-display {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 16px 24px;
+        border-radius: 8px;
+        white-space: nowrap;
+      }
+      
+      .status-badge-display.ready { color: var(--color-rest-text); }
+      .status-badge-display.exercise { color: var(--color-ready-text); }
+      .status-badge-display.rest { color: var(--color-rest-text); }
+      .status-badge-display.paused { color: var(--color-paused); }
+      
       .button-group {
         display: flex;
         gap: 8px;
@@ -231,6 +269,11 @@
         color: white;
       }
       
+      button.resume {
+        background-color: var(--color-ready);
+        color: white;
+      }
+      
       button.yellow {
         background-color: var(--color-rest);
         color: white;
@@ -257,34 +300,8 @@
         margin: 8px auto 0 auto;
         flex: 1;
         overflow-y: auto;
-        max-width: 800px;
+        max-width: 1200px;
         width: 100%;
-      }
-      
-      .exercise-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        position: relative;
-      }
-      
-      .timer-container {
-        width: 80px;
-        flex-shrink: 0;
-        text-align: right;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 700;
-        line-height: 1.2;
-      }
-      
-      .timer-container.exercise { color: var(--color-ready-text); }
-      .timer-container.rest { color: var(--color-rest-text); }
-      .timer-container.ready { color: var(--color-rest-text); }
-      .timer-container.paused { color: var(--color-paused); }
-      
-      .status-badge-container {
-        width: 220px;
-        flex-shrink: 0;
       }
       
       .exercise-item {
@@ -300,8 +317,7 @@
         cursor: pointer;
         color: var(--text-primary);
         font-family: inherit;
-        flex: 1;
-        min-width: 0;
+        width: 100%;
         line-height: 1.2;
       }
       
@@ -327,22 +343,6 @@
         font-weight: 700;
       }
       
-      .status-badge {
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        padding: 16px 12px;
-        line-height: 1.2;
-        white-space: nowrap;
-        width: 220px;
-        text-align: center;
-      }
-      
-      .status-badge.ready { color: var(--color-rest-text); }
-      .status-badge.exercise { color: var(--color-ready-text); }
-      .status-badge.rest { color: var(--color-rest-text); }
-      .status-badge.paused { color: var(--color-paused); }
       
       /* Resume Dialog */
       .resume-dialog {
@@ -397,8 +397,6 @@
       }
       
       .resume-content #resumeBtn {
-        background-color: var(--color-exercise);
-        color: white;
         order: 2;
       }
       
@@ -411,28 +409,80 @@
       /* Mobile Optimizations */
       @media (max-width: 640px) {
         body {
-          padding: 8px;
+          padding: 6px;
         }
         
-        .controls {
+        .audio-controls {
+          flex-direction: column;
+          gap: 8px;
           width: 100%;
+          margin: 4px 0;
+          display: none; /* Hidden by default on mobile */
         }
         
-        .button-group {
+        .audio-controls.expanded {
+          display: flex; /* Show when expanded */
+        }
+        
+        .voice-control {
           width: 100%;
+          justify-content: center;
         }
         
-        button {
+        .voice-control select {
           flex: 1;
-          min-width: 90px;
-          padding: 10px 18px;
-          font-size: clamp(0.875rem, 2.5vw, 1rem);
+          max-width: 280px;
         }
         
         .volume-control {
           width: 100%;
           justify-content: center;
-          margin-top: 4px;
+        }
+        
+        .controls {
+          width: 100%;
+          margin: 4px 0;
+        }
+        
+        .button-group {
+          width: 100%;
+          gap: 6px;
+        }
+        
+        button {
+          flex: 1;
+          min-width: 70px;
+          padding: 12px 8px;
+          font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+          min-height: 44px; /* Touch target size */
+        }
+        
+        .exercise-list {
+          margin: 4px auto 0 auto;
+        }
+        
+        .exercise-item {
+          padding: 14px 16px;
+          font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+          min-height: 44px; /* Touch target size */
+        }
+        
+        .resume-content {
+          padding: 24px 16px;
+          max-width: calc(100vw - 32px);
+        }
+        
+        .resume-content h2 {
+          font-size: clamp(1.25rem, 5vw, 1.5rem);
+        }
+        
+        .resume-content p {
+          font-size: clamp(0.875rem, 3vw, 1rem);
+        }
+        
+        .resume-content .controls button {
+          min-width: 120px;
+          font-size: clamp(0.875rem, 3vw, 1rem);
         }
       }
     </style>
@@ -445,7 +495,7 @@
         <p>You have a workout in progress.</p>
         <div class="controls">
           <button id="startFreshBtn">🔄 Start Fresh</button>
-          <button id="resumeBtn">▶️ Resume</button>
+          <button id="resumeBtn" class="resume">▶️ Resume</button>
         </div>
       </div>
     </div>
@@ -456,11 +506,8 @@
         <div class="timer ready" id="timer">0</div>
       </div>
       
-      <!-- Title -->
-      <h1 class="app-title">7-MINUTE WORKOUT</h1>
-      
       <!-- Audio Controls (Voice & Volume) -->
-      <div class="audio-controls">
+      <div class="audio-controls" id="audioControls">
         <div class="voice-control">
           <label for="voiceSelect">🎙️ Voice:</label>
           <select id="voiceSelect">
@@ -477,11 +524,18 @@
       <!-- Controls -->
       <div class="controls">
         <div class="button-group">
-          <button id="startBtn" class="green">▶️ Start</button>
-          <button id="pauseBtn" class="secondary">⏸️ Pause</button>
-          <button id="resumeWorkoutBtn" class="green">▶️ Resume</button>
+          <button id="playPauseBtn" class="green">▶️ Start</button>
           <button id="skipBtn" class="yellow">⏭️ Skip</button>
           <button id="restartBtn" class="red">🔄 Restart</button>
+          <button id="audioToggle" class="audio-toggle">🔊 Sound</button>
+        </div>
+      </div>
+      
+      <!-- Workout Status -->
+      <div class="workout-status" id="workoutStatus">
+        <div class="status-display">
+          <div class="timer-display" id="timerDisplay"></div>
+          <div class="status-badge-display" id="statusBadgeDisplay"></div>
         </div>
       </div>
       
@@ -530,9 +584,7 @@
       // DOM Elements
       const elements = {
         exerciseList: document.getElementById('exerciseList'),
-        startBtn: document.getElementById('startBtn'),
-        pauseBtn: document.getElementById('pauseBtn'),
-        resumeWorkoutBtn: document.getElementById('resumeWorkoutBtn'),
+        playPauseBtn: document.getElementById('playPauseBtn'),
         skipBtn: document.getElementById('skipBtn'),
         restartBtn: document.getElementById('restartBtn'),
         resumeDialog: document.getElementById('resumeDialog'),
@@ -540,7 +592,11 @@
         startFreshBtn: document.getElementById('startFreshBtn'),
         volumeSlider: document.getElementById('volumeSlider'),
         volumeValue: document.getElementById('volumeValue'),
-        voiceSelect: document.getElementById('voiceSelect')
+        voiceSelect: document.getElementById('voiceSelect'),
+        audioToggle: document.getElementById('audioToggle'),
+        audioControls: document.getElementById('audioControls'),
+        timerDisplay: document.getElementById('timerDisplay'),
+        statusBadgeDisplay: document.getElementById('statusBadgeDisplay')
       };
 
       // Initialize Audio Context
@@ -688,10 +744,19 @@
           }
         }
         
-        // If no saved voice or not found, default to first voice
+        // If no saved voice or not found, prefer en-US voice, otherwise use first voice
         if (availableVoices.length > 0) {
-          selectedVoice = availableVoices[0];
-          elements.voiceSelect.value = 0;
+          // Try to find an en-US voice
+          const enUSIndex = availableVoices.findIndex(v => v.lang.startsWith('en-US'));
+          
+          if (enUSIndex !== -1) {
+            selectedVoice = availableVoices[enUSIndex];
+            elements.voiceSelect.value = enUSIndex;
+          } else {
+            // Fall back to first voice if no en-US found
+            selectedVoice = availableVoices[0];
+            elements.voiceSelect.value = 0;
+          }
         }
       }
 
@@ -730,10 +795,26 @@
 
       // UI Updates
       function updateUI() {
-        // Controls - use disabled instead of hidden
-        elements.startBtn.disabled = (state.phase !== 'idle');
-        elements.pauseBtn.disabled = (state.phase === 'idle' || state.phase === 'paused' || state.phase === 'completed');
-        elements.resumeWorkoutBtn.disabled = (state.phase !== 'paused');
+        // Update play/pause button
+        if (state.phase === 'idle') {
+          elements.playPauseBtn.textContent = '▶️ Start';
+          elements.playPauseBtn.className = 'green';
+          elements.playPauseBtn.disabled = false;
+        } else if (state.phase === 'paused') {
+          elements.playPauseBtn.textContent = '▶️ Resume';
+          elements.playPauseBtn.className = 'resume';
+          elements.playPauseBtn.disabled = false;
+        } else if (state.phase === 'completed') {
+          elements.playPauseBtn.textContent = '▶️ Start';
+          elements.playPauseBtn.className = 'green';
+          elements.playPauseBtn.disabled = false;
+        } else {
+          elements.playPauseBtn.textContent = '⏸️ Pause';
+          elements.playPauseBtn.className = 'yellow';
+          elements.playPauseBtn.disabled = false;
+        }
+        
+        // Other controls
         elements.skipBtn.disabled = (state.phase === 'idle' || state.phase === 'completed');
         elements.restartBtn.disabled = (state.phase === 'idle');
         
@@ -745,70 +826,47 @@
       function renderExerciseList() {
         elements.exerciseList.innerHTML = '';
         EXERCISES.forEach((exercise, index) => {
-          // Create row container
-          const row = document.createElement('div');
-          row.className = 'exercise-row';
-          row.dataset.index = index;
-          
-          // Create timer container (always present for consistent layout)
-          const timerContainer = document.createElement('div');
-          timerContainer.className = 'timer-container';
-          row.appendChild(timerContainer);
-          
-          // Create status badge container (always present for consistent layout)
-          const badgeContainer = document.createElement('div');
-          badgeContainer.className = 'status-badge-container';
-          row.appendChild(badgeContainer);
-          
           // Create exercise button
           const item = document.createElement('button');
           item.className = 'exercise-item';
           item.type = 'button';
           item.textContent = `${index + 1}.  ${exercise}`;
+          item.dataset.index = index;
           
           // Add click handler to jump to this exercise
           item.addEventListener('click', () => {
             jumpToExercise(index);
           });
           
-          row.appendChild(item);
-          elements.exerciseList.appendChild(row);
+          elements.exerciseList.appendChild(item);
         });
       }
       
       // Update exercise list state (classes, timer, badges) without recreating DOM
       function updateExerciseListState() {
-        const rows = elements.exerciseList.querySelectorAll('.exercise-row');
+        // Update top status display (timer and badge)
+        if (state.phase !== 'idle' && state.phase !== 'completed') {
+          elements.timerDisplay.textContent = state.timeRemaining;
+          elements.timerDisplay.className = `timer-display ${state.phase}`;
+          
+          let statusText = state.phase.toUpperCase();
+          if (state.phase === 'ready') statusText = 'GET READY';
+          
+          elements.statusBadgeDisplay.textContent = statusText;
+          elements.statusBadgeDisplay.className = `status-badge-display ${state.phase}`;
+        } else {
+          elements.timerDisplay.textContent = '';
+          elements.timerDisplay.className = 'timer-display';
+          elements.statusBadgeDisplay.textContent = '';
+          elements.statusBadgeDisplay.className = 'status-badge-display';
+        }
         
-        rows.forEach((row, index) => {
-          const timerContainer = row.querySelector('.timer-container');
-          const badgeContainer = row.querySelector('.status-badge-container');
-          const exerciseItem = row.querySelector('.exercise-item');
-          
+        // Update exercise buttons
+        const exerciseItems = elements.exerciseList.querySelectorAll('.exercise-item');
+        
+        exerciseItems.forEach((exerciseItem, index) => {
           // Reset all classes
-          timerContainer.className = 'timer-container';
-          badgeContainer.innerHTML = '';
           exerciseItem.className = 'exercise-item';
-          
-          // Update timer for current exercise
-          if (index === state.currentExerciseIndex && state.phase !== 'idle' && state.phase !== 'completed') {
-            timerContainer.textContent = state.timeRemaining;
-            timerContainer.classList.add(state.phase);
-          } else {
-            timerContainer.textContent = '';
-          }
-          
-          // Update status badge for current exercise
-          if (index === state.currentExerciseIndex && state.phase !== 'idle' && state.phase !== 'completed') {
-            const badge = document.createElement('div');
-            badge.className = `status-badge ${state.phase}`;
-            
-            let statusText = state.phase.toUpperCase();
-            if (state.phase === 'ready') statusText = 'GET READY';
-            
-            badge.textContent = statusText;
-            badgeContainer.appendChild(badge);
-          }
           
           // Update exercise button state
           if (state.phase !== 'idle') {
@@ -1052,12 +1110,26 @@
         elements.resumeDialog.classList.remove('hidden');
       }
 
+      // Play/Pause button handler
+      function handlePlayPause() {
+        if (state.phase === 'idle' || state.phase === 'completed') {
+          startWorkout();
+        } else if (state.phase === 'paused') {
+          resumeWorkout();
+        } else {
+          pauseWorkout();
+        }
+      }
+
       // Event Listeners
-      elements.startBtn.addEventListener('click', startWorkout);
-      elements.pauseBtn.addEventListener('click', pauseWorkout);
-      elements.resumeWorkoutBtn.addEventListener('click', resumeWorkout);
+      elements.playPauseBtn.addEventListener('click', handlePlayPause);
       elements.skipBtn.addEventListener('click', skipExercise);
       elements.restartBtn.addEventListener('click', restartWorkout);
+
+      // Audio controls toggle
+      elements.audioToggle.addEventListener('click', () => {
+        elements.audioControls.classList.toggle('expanded');
+      });
 
       elements.resumeBtn.addEventListener('click', () => {
         elements.resumeDialog.classList.add('hidden');

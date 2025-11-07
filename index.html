@@ -408,6 +408,14 @@
       
       /* Mobile Optimizations */
       @media (max-width: 640px) {
+        button:hover:not(:disabled) {
+          transform: none;
+        }
+
+        button:active:not(:disabled) {
+          transform: none;
+        }
+
         body {
           padding: 6px;
         }

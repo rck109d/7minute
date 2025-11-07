@@ -269,7 +269,7 @@
         color: white;
       }
       
-      button.resume {
+      button.blue {
         background-color: var(--color-ready);
         color: white;
       }
@@ -504,7 +504,7 @@
         <p>You have a workout in progress.</p>
         <div class="controls">
           <button id="startFreshBtn">🔄 Start Fresh</button>
-          <button id="resumeBtn" class="resume">▶️ Resume</button>
+          <button id="resumeBtn" class="blue">▶️ Resume</button>
         </div>
       </div>
     </div>
@@ -533,9 +533,9 @@
       <!-- Controls -->
       <div class="controls">
         <div class="button-group">
-          <button id="playPauseBtn" class="green">▶️&nbsp;Start</button>
-          <button id="skipBtn" class="yellow">⏭️&nbsp;Skip</button>
           <button id="restartBtn" class="red">🔄&nbsp;Restart</button>
+          <button id="playPauseBtn" class="green">▶️&nbsp;Start</button>
+          <button id="skipBtn" class="resume">⏭️&nbsp;Skip</button>
           <button id="audioToggle" class="audio-toggle">🔊&nbsp;Sound</button>
         </div>
       </div>
@@ -811,7 +811,7 @@
           elements.playPauseBtn.disabled = false;
         } else if (state.phase === 'paused') {
           elements.playPauseBtn.textContent = '▶️\u00A0Resume';
-          elements.playPauseBtn.className = 'resume';
+          elements.playPauseBtn.className = 'blue';
           elements.playPauseBtn.disabled = false;
         } else if (state.phase === 'completed') {
           elements.playPauseBtn.textContent = '▶️\u00A0Start';

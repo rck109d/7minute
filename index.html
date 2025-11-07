@@ -3,96 +3,1123 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Hello World</title>
+    <title>7-Minute Workout</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='80' font-size='80' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui, sans-serif'>7</text></svg>" />
+    <!-- 
+      Based on "The Scientific 7-Minute Workout" 
+      https://archive.nytimes.com/well.blogs.nytimes.com/2013/05/09/the-scientific-7-minute-workout/
+      Published in ACSM's Health & Fitness Journal, May-June 2013
+    -->
     <style>
       :root {
         color-scheme: light dark;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background-color: Canvas;
-        color: CanvasText;
+        --bg-primary: #000000;
+        --bg-secondary: #1a1a1a;
+        --text-primary: #ffffff;
+        --text-secondary: #a0a0a0;
+        --color-exercise: #10b981;
+        --color-rest: #d97706;
+        --color-ready: #1d4ed8;
+        --color-paused: #6b7280;
+        --color-completed: #8b5cf6;
+        --color-rest-text: #f59e0b;
+        --color-ready-text: #3b82f6;
+        --border-color: #404040;
       }
-      body {
-        display: grid;
-        place-items: center;
-        min-height: 100vh;
+      
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-primary: #000000;
+          --bg-secondary: #1a1a1a;
+          --text-primary: #ffffff;
+          --text-secondary: #a0a0a0;
+          --border-color: #404040;
+        }
+      }
+      
+      * {
+        box-sizing: border-box;
         margin: 0;
+        padding: 0;
       }
-      h1 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
+      
+      body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        overflow-x: hidden;
+      }
+      
+      .container {
+        max-width: 100%;
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+      
+      /* Main Display Area */
+      .main-display {
+        display: none;
+      }
+      
+      /* Title */
+      .app-title {
+        text-align: center;
+        font-size: clamp(1.75rem, 5vw, 2.5rem);
+        font-weight: 900;
+        color: var(--text-primary);
+        margin: 8px 0;
+        letter-spacing: 0.1em;
+      }
+      
+      /* Audio Controls (Voice & Volume) */
+      .audio-controls {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+        flex-wrap: wrap;
+      }
+      
+      /* Volume Control */
+      .volume-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: clamp(1rem, 3vw, 1.25rem);
         font-weight: 700;
+        text-transform: uppercase;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px 12px;
+        background-color: transparent;
+      }
+      
+      .volume-control label {
+        color: white;
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        white-space: nowrap;
+      }
+      
+      .volume-control span {
+        display: inline-block;
+        min-width: 60px;
+        text-align: right;
+      }
+      
+      /* Voice Control */
+      .voice-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px 12px;
+        background-color: transparent;
+      }
+      
+      .voice-control label {
+        color: white;
+      }
+      
+      .voice-control select {
+        padding: 10px 16px;
+        font-size: clamp(0.875rem, 2.5vw, 1rem);
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        cursor: pointer;
+        min-width: 200px;
+      }
+      
+      .volume-control input[type="range"] {
+        width: 150px;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--bg-secondary);
+        border-radius: 3px;
+        outline: none;
+      }
+      
+      .volume-control input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      
+      .volume-control input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+      
+      /* Controls */
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+        flex-wrap: wrap;
+      }
+      
+      .button-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      button {
+        padding: 12px 24px;
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: var(--color-exercise);
+        color: white;
+        min-width: 120px;
+      }
+      
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+      
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      button.secondary {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 2px solid var(--border-color);
+      }
+      
+      button.green {
+        background-color: var(--color-exercise);
+        color: white;
+      }
+      
+      button.yellow {
+        background-color: var(--color-rest);
+        color: white;
+      }
+      
+      button.red {
+        background-color: #dc2626;
+        color: white;
+      }
+      
+      button.danger {
+        background-color: #ef4444;
+      }
+      
+      .hidden {
+        display: none !important;
+      }
+      
+      /* Exercise List */
+      .exercise-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 8px auto 0 auto;
+        flex: 1;
+        overflow-y: auto;
+        max-width: 800px;
+        width: 100%;
+      }
+      
+      .exercise-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+      }
+      
+      .timer-container {
+        width: 80px;
+        flex-shrink: 0;
+        text-align: right;
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      
+      .timer-container.exercise { color: var(--color-ready-text); }
+      .timer-container.rest { color: var(--color-rest-text); }
+      .timer-container.ready { color: var(--color-rest-text); }
+      .timer-container.paused { color: var(--color-paused); }
+      
+      .status-badge-container {
+        width: 220px;
+        flex-shrink: 0;
+      }
+      
+      .exercise-item {
+        padding: 16px 20px;
+        border-radius: 8px;
+        background-color: var(--bg-secondary);
+        border: none;
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: left;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        color: var(--text-primary);
+        font-family: inherit;
+        flex: 1;
+        min-width: 0;
+        line-height: 1.2;
+      }
+      
+      .exercise-item:hover:not(.current-ready):not(.current-exercise):not(.current-rest) {
+        background-color: var(--border-color);
+      }
+      
+      .exercise-item.completed {
+        background-color: var(--color-exercise);
+        color: white;
+      }
+      
+      .exercise-item.current-ready,
+      .exercise-item.current-rest {
+        background-color: var(--color-rest);
+        color: white;
+        font-weight: 700;
+      }
+      
+      .exercise-item.current-exercise {
+        background-color: var(--color-ready);
+        color: white;
+        font-weight: 700;
+      }
+      
+      .status-badge {
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        padding: 16px 12px;
+        line-height: 1.2;
+        white-space: nowrap;
+        width: 220px;
+        text-align: center;
+      }
+      
+      .status-badge.ready { color: var(--color-rest-text); }
+      .status-badge.exercise { color: var(--color-ready-text); }
+      .status-badge.rest { color: var(--color-rest-text); }
+      .status-badge.paused { color: var(--color-paused); }
+      
+      /* Resume Dialog */
+      .resume-dialog {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 16px;
+      }
+      
+      .resume-content {
+        background-color: var(--bg-primary);
+        padding: 32px;
+        border-radius: 16px;
+        text-align: center;
+        max-width: 600px;
+        width: 100%;
+        border: 4px solid #ffffff;
+      }
+      
+      .resume-content h2 {
+        margin-bottom: 16px;
+        font-size: clamp(1.5rem, 5vw, 2rem);
+        text-transform: uppercase;
+      }
+      
+      .resume-content p {
+        margin-bottom: 24px;
+        color: var(--text-secondary);
+        font-size: clamp(1rem, 3vw, 1.125rem);
+      }
+      
+      .resume-content .controls {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: nowrap;
+      }
+      
+      .resume-content .controls button {
+        flex: 1;
+        min-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .resume-content #resumeBtn {
+        background-color: var(--color-exercise);
+        color: white;
+        order: 2;
+      }
+      
+      .resume-content #startFreshBtn {
+        background-color: #dc2626;
+        color: white;
+        order: 1;
+      }
+      
+      /* Mobile Optimizations */
+      @media (max-width: 640px) {
+        body {
+          padding: 8px;
+        }
+        
+        .controls {
+          width: 100%;
+        }
+        
+        .button-group {
+          width: 100%;
+        }
+        
+        button {
+          flex: 1;
+          min-width: 90px;
+          padding: 10px 18px;
+          font-size: clamp(0.875rem, 2.5vw, 1rem);
+        }
+        
+        .volume-control {
+          width: 100%;
+          justify-content: center;
+          margin-top: 4px;
+        }
       }
     </style>
   </head>
   <body>
-    <button id="speakButton" type="button">Speak Hello World</button>
-    <p id="status" role="status" aria-live="polite"></p>
+    <!-- Resume Dialog -->
+    <div id="resumeDialog" class="resume-dialog hidden">
+      <div class="resume-content">
+        <h2>Resume Workout?</h2>
+        <p>You have a workout in progress.</p>
+        <div class="controls">
+          <button id="startFreshBtn">🔄 Start Fresh</button>
+          <button id="resumeBtn">▶️ Resume</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Main Display -->
+      <div class="main-display">
+        <div class="timer ready" id="timer">0</div>
+      </div>
+      
+      <!-- Title -->
+      <h1 class="app-title">7-MINUTE WORKOUT</h1>
+      
+      <!-- Audio Controls (Voice & Volume) -->
+      <div class="audio-controls">
+        <div class="voice-control">
+          <label for="voiceSelect">🎙️ Voice:</label>
+          <select id="voiceSelect">
+            <option value="">Loading voices...</option>
+          </select>
+        </div>
+        <div class="volume-control">
+          <label for="volumeSlider">🔊 Volume:</label>
+          <input type="range" id="volumeSlider" min="0" max="100" value="100" />
+          <span id="volumeValue">100%</span>
+        </div>
+      </div>
+      
+      <!-- Controls -->
+      <div class="controls">
+        <div class="button-group">
+          <button id="startBtn" class="green">▶️ Start</button>
+          <button id="pauseBtn" class="secondary">⏸️ Pause</button>
+          <button id="resumeWorkoutBtn" class="green">▶️ Resume</button>
+          <button id="skipBtn" class="yellow">⏭️ Skip</button>
+          <button id="restartBtn" class="red">🔄 Restart</button>
+        </div>
+      </div>
+      
+      <!-- Exercise List -->
+      <div class="exercise-list" id="exerciseList"></div>
+    </div>
+
     <script>
-      const statusEl = document.getElementById("status");
-      const speakButton = document.getElementById("speakButton");
-      const setStatus = (message, isError = false) => {
-        if (!statusEl) return;
-        statusEl.textContent = message;
-        statusEl.style.color = isError ? "crimson" : "";
+      // Exercise Data
+      const EXERCISES = [
+        "Jumping Jacks",
+        "Wall Sit",
+        "Push-up",
+        "Abdominal Crunch",
+        "Step-up onto Chair",
+        "Squat",
+        "Triceps Dip on Chair",
+        "Plank",
+        "High Knees",
+        "Lunge",
+        "Push-up and Rotation",
+        "Side Plank Right",
+        "Side Plank Left"
+      ];
+
+      const EXERCISE_DURATION = 30; // seconds
+      const REST_DURATION = 10; // seconds
+      const READY_DURATION = 10; // seconds
+
+      // State
+      let state = {
+        phase: 'idle', // 'idle', 'ready', 'exercise', 'rest', 'paused', 'completed'
+        previousPhase: null, // Track what phase we were in before pausing
+        currentExerciseIndex: 0,
+        timeRemaining: 0,
+        isPaused: false,
+        completedExercises: []
       };
 
-      const setError = (message) => {
-        console.error(message);
-        setStatus(message, true);
+      let timerInterval = null;
+      let audioContext = null;
+      let speechVolume = 1.0; // Default 100%
+      let availableVoices = [];
+      let selectedVoice = null;
+
+      // DOM Elements
+      const elements = {
+        exerciseList: document.getElementById('exerciseList'),
+        startBtn: document.getElementById('startBtn'),
+        pauseBtn: document.getElementById('pauseBtn'),
+        resumeWorkoutBtn: document.getElementById('resumeWorkoutBtn'),
+        skipBtn: document.getElementById('skipBtn'),
+        restartBtn: document.getElementById('restartBtn'),
+        resumeDialog: document.getElementById('resumeDialog'),
+        resumeBtn: document.getElementById('resumeBtn'),
+        startFreshBtn: document.getElementById('startFreshBtn'),
+        volumeSlider: document.getElementById('volumeSlider'),
+        volumeValue: document.getElementById('volumeValue'),
+        voiceSelect: document.getElementById('voiceSelect')
       };
 
-      const setButtonEnabled = (enabled) => {
-        if (!speakButton) return;
-        speakButton.disabled = !enabled;
-      };
+      // Initialize Audio Context
+      function initAudio() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
 
-      const startSpeech = () => {
-        if (!speakButton) {
-          setError("Speak button is missing from the page.");
+      // Sound Effects
+      function playWhistle() {
+        initAudio();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      }
+
+      function playCompletionSound() {
+        initAudio();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C (major chord)
+        
+        notes.forEach((freq, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = freq;
+          oscillator.type = 'sine';
+          
+          const startTime = audioContext.currentTime + (index * 0.1);
+          gainNode.gain.setValueAtTime(0.2, startTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+          
+          oscillator.start(startTime);
+          oscillator.stop(startTime + 0.5);
+        });
+      }
+
+      // Speech Synthesis
+      function speak(text) {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          utterance.volume = speechVolume;
+          if (selectedVoice) {
+            utterance.voice = selectedVoice;
+          }
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+
+      // Volume Functions
+      function saveVolume() {
+        localStorage.setItem('speechVolume', speechVolume.toString());
+      }
+
+      function loadVolume() {
+        const saved = localStorage.getItem('speechVolume');
+        if (saved) {
+          speechVolume = parseFloat(saved);
+          const percentage = Math.round(speechVolume * 100);
+          elements.volumeSlider.value = percentage;
+          elements.volumeValue.textContent = `${percentage}%`;
+        }
+      }
+
+      function updateVolume(value) {
+        speechVolume = value / 100;
+        elements.volumeValue.textContent = `${value}%`;
+        saveVolume();
+      }
+
+      // Voice control functions
+      function loadVoices() {
+        const voices = speechSynthesis.getVoices();
+        
+        // Don't load if no voices available
+        if (voices.length === 0) {
           return;
         }
-
-        setButtonEnabled(false);
-        const utterance = new SpeechSynthesisUtterance("Hello World");
-
-        utterance.onstart = () => setStatus("Speech playback started.");
-        utterance.onend = () => {
-          setStatus("Speech playback finished.");
-          setButtonEnabled(true);
-          speakButton.focus();
-        };
-        utterance.onerror = (event) => {
-          setError(`Speech synthesis error: ${event.error || "unknown"}`);
-          setButtonEnabled(true);
-        };
-
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-      };
-
-      document.addEventListener("DOMContentLoaded", () => {
-        if (!speakButton) {
-          setError("Speak button is missing from the page.");
-          return;
+        
+        // Skip if we already have voices loaded and they haven't changed
+        if (availableVoices.length > 0) {
+          // Check if voice list actually changed by comparing names
+          if (voices.length === availableVoices.length) {
+            const namesMatch = voices.every((voice, i) => voice.name === availableVoices[i].name);
+            if (namesMatch) {
+              return; // No change, skip rebuild
+            }
+          }
         }
+        
+        // Save current selection before rebuilding
+        const currentSelectedName = selectedVoice ? selectedVoice.name : localStorage.getItem('workoutVoice');
+        
+        // Update available voices
+        availableVoices = voices;
+        
+        // Clear dropdown
+        elements.voiceSelect.innerHTML = '';
+        
+        // Add voices to dropdown
+        availableVoices.forEach((voice, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = `${voice.name} (${voice.lang})`;
+          elements.voiceSelect.appendChild(option);
+        });
+        
+        // Restore voice preference
+        loadVoicePreference(currentSelectedName);
+      }
 
-        if (!("speechSynthesis" in window)) {
-          setError("Speech synthesis is not supported in this browser.");
-          setButtonEnabled(false);
-          return;
+      function saveVoicePreference() {
+        if (selectedVoice) {
+          localStorage.setItem('workoutVoice', selectedVoice.name);
         }
+      }
 
-        setStatus("Press the button to hear 'Hello World'.");
+      function loadVoicePreference(preferredVoiceName) {
+        const savedVoiceName = preferredVoiceName || localStorage.getItem('workoutVoice');
+        
+        if (savedVoiceName) {
+          const voiceIndex = availableVoices.findIndex(v => v.name === savedVoiceName);
+          if (voiceIndex !== -1) {
+            elements.voiceSelect.value = voiceIndex;
+            // Always update selectedVoice to point to current voice object
+            selectedVoice = availableVoices[voiceIndex];
+            return;
+          }
+        }
+        
+        // If no saved voice or not found, default to first voice
+        if (availableVoices.length > 0) {
+          selectedVoice = availableVoices[0];
+          elements.voiceSelect.value = 0;
+        }
+      }
 
-        speakButton.addEventListener("click", () => {
-          try {
-            startSpeech();
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : String(error ?? "unknown error");
-            setError(`Unable to start speech: ${message}`);
-            setButtonEnabled(true);
+      function handleVoiceChange() {
+        const voiceIndex = parseInt(elements.voiceSelect.value);
+        selectedVoice = availableVoices[voiceIndex];
+        saveVoicePreference();
+        
+        // Test the voice
+        const testUtterance = new SpeechSynthesisUtterance('Voice selected');
+        testUtterance.voice = selectedVoice;
+        testUtterance.volume = speechVolume;
+        speechSynthesis.speak(testUtterance);
+      }
+
+      // LocalStorage
+      function saveState() {
+        if (state.phase !== 'idle' && state.phase !== 'completed') {
+          localStorage.setItem('workoutState', JSON.stringify(state));
+        } else {
+          localStorage.removeItem('workoutState');
+        }
+      }
+
+      function loadState() {
+        const saved = localStorage.getItem('workoutState');
+        if (saved) {
+          return JSON.parse(saved);
+        }
+        return null;
+      }
+
+      function clearSavedState() {
+        localStorage.removeItem('workoutState');
+      }
+
+      // UI Updates
+      function updateUI() {
+        // Controls - use disabled instead of hidden
+        elements.startBtn.disabled = (state.phase !== 'idle');
+        elements.pauseBtn.disabled = (state.phase === 'idle' || state.phase === 'paused' || state.phase === 'completed');
+        elements.resumeWorkoutBtn.disabled = (state.phase !== 'paused');
+        elements.skipBtn.disabled = (state.phase === 'idle' || state.phase === 'completed');
+        elements.restartBtn.disabled = (state.phase === 'idle');
+        
+        // Update exercise list state without recreating DOM
+        updateExerciseListState();
+      }
+
+      // Create the exercise list structure once (called only on init)
+      function renderExerciseList() {
+        elements.exerciseList.innerHTML = '';
+        EXERCISES.forEach((exercise, index) => {
+          // Create row container
+          const row = document.createElement('div');
+          row.className = 'exercise-row';
+          row.dataset.index = index;
+          
+          // Create timer container (always present for consistent layout)
+          const timerContainer = document.createElement('div');
+          timerContainer.className = 'timer-container';
+          row.appendChild(timerContainer);
+          
+          // Create status badge container (always present for consistent layout)
+          const badgeContainer = document.createElement('div');
+          badgeContainer.className = 'status-badge-container';
+          row.appendChild(badgeContainer);
+          
+          // Create exercise button
+          const item = document.createElement('button');
+          item.className = 'exercise-item';
+          item.type = 'button';
+          item.textContent = `${index + 1}.  ${exercise}`;
+          
+          // Add click handler to jump to this exercise
+          item.addEventListener('click', () => {
+            jumpToExercise(index);
+          });
+          
+          row.appendChild(item);
+          elements.exerciseList.appendChild(row);
+        });
+      }
+      
+      // Update exercise list state (classes, timer, badges) without recreating DOM
+      function updateExerciseListState() {
+        const rows = elements.exerciseList.querySelectorAll('.exercise-row');
+        
+        rows.forEach((row, index) => {
+          const timerContainer = row.querySelector('.timer-container');
+          const badgeContainer = row.querySelector('.status-badge-container');
+          const exerciseItem = row.querySelector('.exercise-item');
+          
+          // Reset all classes
+          timerContainer.className = 'timer-container';
+          badgeContainer.innerHTML = '';
+          exerciseItem.className = 'exercise-item';
+          
+          // Update timer for current exercise
+          if (index === state.currentExerciseIndex && state.phase !== 'idle' && state.phase !== 'completed') {
+            timerContainer.textContent = state.timeRemaining;
+            timerContainer.classList.add(state.phase);
+          } else {
+            timerContainer.textContent = '';
+          }
+          
+          // Update status badge for current exercise
+          if (index === state.currentExerciseIndex && state.phase !== 'idle' && state.phase !== 'completed') {
+            const badge = document.createElement('div');
+            badge.className = `status-badge ${state.phase}`;
+            
+            let statusText = state.phase.toUpperCase();
+            if (state.phase === 'ready') statusText = 'GET READY';
+            
+            badge.textContent = statusText;
+            badgeContainer.appendChild(badge);
+          }
+          
+          // Update exercise button state
+          if (state.phase !== 'idle') {
+            if (state.completedExercises.includes(index)) {
+              exerciseItem.classList.add('completed');
+            }
+            if (index === state.currentExerciseIndex) {
+              // Apply class based on current phase
+              if (state.phase === 'rest') {
+                exerciseItem.classList.add('current-rest');
+              } else if (state.phase === 'ready') {
+                exerciseItem.classList.add('current-ready');
+              } else if (state.phase === 'exercise') {
+                exerciseItem.classList.add('current-exercise');
+              } else if (state.phase === 'paused' && state.previousPhase) {
+                // For paused, use the previousPhase color
+                if (state.previousPhase === 'rest') {
+                  exerciseItem.classList.add('current-rest');
+                } else if (state.previousPhase === 'ready') {
+                  exerciseItem.classList.add('current-ready');
+                } else if (state.previousPhase === 'exercise') {
+                  exerciseItem.classList.add('current-exercise');
+                }
+              }
+            }
           }
         });
+      }
+
+      // Jump to a specific exercise
+      function jumpToExercise(index) {
+        stopTimer();
+        
+        // Set up state for the selected exercise
+        state.currentExerciseIndex = index;
+        state.phase = 'ready';
+        state.previousPhase = null;
+        state.timeRemaining = REST_DURATION;
+        state.isPaused = false;
+        
+        // Mark all exercises before this one as completed
+        state.completedExercises = [];
+        for (let i = 0; i < index; i++) {
+          state.completedExercises.push(i);
+        }
+        
+        // Announce the exercise
+        speak(`Get ready for ${EXERCISES[index]}`);
+        
+        startTimer();
+        updateUI();
+        saveState();
+      }
+
+      // Timer Logic
+      function startTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
+        
+        timerInterval = setInterval(() => {
+          if (state.timeRemaining > 0) {
+            state.timeRemaining--;
+            
+            // Halfway announcement (only during exercise phase)
+            if (state.phase === 'exercise' && state.timeRemaining === 15) {
+              speak('Halfway');
+            }
+            
+            // Countdown announcements
+            if (state.timeRemaining <= 3 && state.timeRemaining > 0) {
+              speak(state.timeRemaining.toString());
+            }
+            
+            // Whistle at 0
+            if (state.timeRemaining === 0) {
+              playWhistle();
+            }
+            
+            updateUI(); // No full render - just update timer
+            saveState();
+          } else {
+            advancePhase();
+          }
+        }, 1000);
+      }
+
+      function stopTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function advancePhase() {
+        stopTimer();
+        
+        if (state.phase === 'ready') {
+          // Move to first exercise
+          state.phase = 'exercise';
+          state.timeRemaining = EXERCISE_DURATION;
+          speak(EXERCISES[state.currentExerciseIndex]);
+          startTimer();
+        } else if (state.phase === 'exercise') {
+          // Mark as completed
+          if (!state.completedExercises.includes(state.currentExerciseIndex)) {
+            state.completedExercises.push(state.currentExerciseIndex);
+          }
+          
+          // Check if workout is complete
+          if (state.currentExerciseIndex >= EXERCISES.length - 1) {
+            state.phase = 'completed';
+            playCompletionSound();
+            speak('Workout complete! Great job!');
+            clearSavedState();
+            updateUI();
+            return;
+          }
+          
+          // Move to rest
+          state.phase = 'rest';
+          state.timeRemaining = REST_DURATION;
+          state.currentExerciseIndex++;
+          speak(`Rest. Next exercise: ${EXERCISES[state.currentExerciseIndex]}`);
+          startTimer();
+        } else if (state.phase === 'rest') {
+          // Move to next exercise
+          state.phase = 'exercise';
+          state.timeRemaining = EXERCISE_DURATION;
+          speak(EXERCISES[state.currentExerciseIndex]);
+          startTimer();
+        }
+        
+        updateUI();
+        saveState();
+      }
+
+      // Control Functions
+      function startWorkout() {
+        state = {
+          phase: 'ready',
+          previousPhase: null,
+          currentExerciseIndex: 0,
+          timeRemaining: READY_DURATION,
+          isPaused: false,
+          completedExercises: []
+        };
+        
+        speak(`Get ready for ${EXERCISES[0]}`);
+        startTimer();
+        updateUI();
+        saveState();
+      }
+
+      function pauseWorkout() {
+        state.previousPhase = state.phase; // Save the current phase before pausing
+        state.phase = 'paused';
+        state.isPaused = true;
+        stopTimer();
+        updateUI();
+        saveState();
+      }
+
+      function resumeWorkout() {
+        if (state.phase === 'paused') {
+          state.isPaused = false;
+          
+          // Restore the phase we were in before pausing
+          if (state.previousPhase) {
+            state.phase = state.previousPhase;
+          } else {
+            // Fallback logic if previousPhase wasn't saved (legacy state)
+            if (state.currentExerciseIndex === 0 && state.completedExercises.length === 0 && state.timeRemaining === REST_DURATION) {
+              state.phase = 'ready';
+            } else if (state.completedExercises.includes(state.currentExerciseIndex)) {
+              state.phase = 'rest';
+            } else {
+              state.phase = 'exercise';
+            }
+          }
+          
+          // If timeRemaining is 0, advance to next phase
+          if (state.timeRemaining === 0) {
+            advancePhase();
+            return;
+          }
+          
+          startTimer();
+        }
+        updateUI();
+        saveState();
+      }
+
+      function skipExercise() {
+        if (state.phase === 'idle' || state.phase === 'completed') {
+          return;
+        }
+        
+        stopTimer();
+        
+        // Mark current exercise as completed if not already
+        if (!state.completedExercises.includes(state.currentExerciseIndex)) {
+          state.completedExercises.push(state.currentExerciseIndex);
+        }
+        
+        // Check if this was the last exercise
+        if (state.currentExerciseIndex >= EXERCISES.length - 1) {
+          state.phase = 'completed';
+          playCompletionSound();
+          speak('Workout complete! Great job!');
+          clearSavedState();
+          updateUI();
+          return;
+        }
+        
+        // Move to next exercise's ready phase
+        state.currentExerciseIndex++;
+        state.phase = 'ready';
+        state.timeRemaining = REST_DURATION;
+        state.previousPhase = null;
+        
+        speak(`Get ready for ${EXERCISES[state.currentExerciseIndex]}`);
+        
+        startTimer();
+        updateUI();
+        saveState();
+      }
+
+      function restartWorkout() {
+        // For completed state, immediately start a new workout
+        if (state.phase === 'completed') {
+          clearSavedState();
+          startWorkout();
+          return;
+        }
+        
+        // For all other active states, pause and show dialog
+        if (state.phase !== 'idle' && state.phase !== 'paused') {
+          pauseWorkout();
+        }
+        elements.resumeDialog.classList.remove('hidden');
+      }
+
+      // Event Listeners
+      elements.startBtn.addEventListener('click', startWorkout);
+      elements.pauseBtn.addEventListener('click', pauseWorkout);
+      elements.resumeWorkoutBtn.addEventListener('click', resumeWorkout);
+      elements.skipBtn.addEventListener('click', skipExercise);
+      elements.restartBtn.addEventListener('click', restartWorkout);
+
+      elements.resumeBtn.addEventListener('click', () => {
+        elements.resumeDialog.classList.add('hidden');
+        resumeWorkout();
+      });
+
+      elements.startFreshBtn.addEventListener('click', () => {
+        elements.resumeDialog.classList.add('hidden');
+        clearSavedState();
+        state = {
+          phase: 'idle',
+          previousPhase: null,
+          currentExerciseIndex: 0,
+          timeRemaining: 0,
+          isPaused: false,
+          completedExercises: []
+        };
+        updateUI();
+      });
+
+      // Volume slider event listener
+      elements.volumeSlider.addEventListener('input', (e) => {
+        updateVolume(parseInt(e.target.value));
+      });
+
+      // Voice selector event listeners
+      elements.voiceSelect.addEventListener('change', handleVoiceChange);
+      
+      // Pause workout when opening voice dropdown
+      elements.voiceSelect.addEventListener('focus', () => {
+        if (state.phase === 'ready' || state.phase === 'exercise' || state.phase === 'rest') {
+          pauseWorkout();
+        }
+      });
+
+      // Initialize voices
+      speechSynthesis.addEventListener('voiceschanged', loadVoices);
+      
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        loadVolume();
+        loadVoices(); // Load voices immediately
+        
+        // Create exercise list structure once
+        renderExerciseList();
+        
+        const savedState = loadState();
+        
+        if (savedState) {
+          state = savedState;
+          state.isPaused = true;
+          state.phase = 'paused';
+          elements.resumeDialog.classList.remove('hidden');
+        }
+        
+        // Update state (without recreating DOM)
+        updateUI();
+      });
+
+      // Save state before page unload
+      window.addEventListener('beforeunload', () => {
+        saveState();
       });
     </script>
   </body>

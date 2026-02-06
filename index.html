@@ -634,6 +634,34 @@
         oscillator.stop(audioContext.currentTime + 0.2);
       }
 
+      let lastVolumeToneTime = 0;
+      const VOLUME_TONE_DURATION_SECONDS = 0.18;
+      const VOLUME_TONE_THROTTLE_MILLIS = VOLUME_TONE_DURATION_SECONDS * 1000;
+
+      function playVolumePreviewTone() {
+        initAudio();
+        const vol = speechVolume; // 0–1
+        if (vol < 0.01) return; // Skip if effectively muted
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+
+        const t0 = audioContext.currentTime;
+        gainNode.gain.setValueAtTime(0, t0);
+        gainNode.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+        gainNode.gain.setValueAtTime(vol, t0 + 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, t0 + VOLUME_TONE_DURATION_SECONDS);
+
+        oscillator.start(t0);
+        oscillator.stop(t0 + VOLUME_TONE_DURATION_SECONDS);
+      }
+
       function playCompletionSound() {
         initAudio();
         const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C (major chord)
@@ -1159,10 +1187,24 @@
         updateUI();
       });
 
-      // Volume slider event listener
-      elements.volumeSlider.addEventListener('input', (e) => {
+      // Volume slider event listeners (tone feedback while moving and when released)
+      function handleVolumeInput(e) {
+        const value = parseInt(e.target.value);
+        updateVolume(value);
+        const now = Date.now();
+        if (now - lastVolumeToneTime >= VOLUME_TONE_THROTTLE_MILLIS) {
+          lastVolumeToneTime = now;
+          playVolumePreviewTone();
+        }
+      }
+
+      function handleVolumeChange(e) {
         updateVolume(parseInt(e.target.value));
-      });
+        playVolumePreviewTone(); // Always play when user releases
+      }
+
+      elements.volumeSlider.addEventListener('input', handleVolumeInput);
+      elements.volumeSlider.addEventListener('change', handleVolumeChange);
 
       // Voice selector event listeners
       elements.voiceSelect.addEventListener('change', handleVoiceChange);
@@ -1173,6 +1215,17 @@
           pauseWorkout();
         }
       });
+
+      // Pause workout when window/tab loses focus
+      function handleFocusLoss() {
+        if (state.phase === 'exercise' || state.phase === 'rest') {
+          pauseWorkout();
+        }
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') handleFocusLoss();
+      });
+      window.addEventListener('blur', handleFocusLoss); // Catches Alt+Tab, clicking another app
 
       // Initialize voices
       speechSynthesis.addEventListener('voiceschanged', loadVoices);

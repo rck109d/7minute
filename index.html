@@ -809,7 +809,7 @@
 
       // LocalStorage
       function saveState() {
-        if (state.phase !== 'idle' && state.phase !== 'completed') {
+        if (state.phase !== 'idle' && state.phase !== 'completed' && state.phase !== 'interrupted') {
           localStorage.setItem('workoutState', JSON.stringify(state));
         } else {
           localStorage.removeItem('workoutState');
@@ -1213,6 +1213,17 @@
           pauseWorkout();
         }
       });
+
+      // Pause workout when window/tab loses focus
+      function handleFocusLoss() {
+        if (state.phase === 'exercise' || state.phase === 'rest') {
+          pauseWorkout();
+        }
+      }
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') handleFocusLoss();
+      });
+      window.addEventListener('blur', handleFocusLoss); // Catches Alt+Tab, clicking another app
 
       // Initialize voices
       speechSynthesis.addEventListener('voiceschanged', loadVoices);

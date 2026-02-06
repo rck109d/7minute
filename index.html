@@ -635,7 +635,8 @@
       }
 
       let lastVolumeToneTime = 0;
-      const VOLUME_TONE_THROTTLE_MS = 180; // >= tone duration to avoid overlap
+      const VOLUME_TONE_DURATION_SECONDS = 0.18;
+      const VOLUME_TONE_THROTTLE_MILLIS = VOLUME_TONE_DURATION_SECONDS * 1000;
 
       function playVolumePreviewTone() {
         initAudio();
@@ -651,13 +652,14 @@
         oscillator.type = 'sine';
         oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
 
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(vol, audioContext.currentTime + 0.02);
-        gainNode.gain.setValueAtTime(vol, audioContext.currentTime + 0.08);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.18);
+        const t0 = audioContext.currentTime;
+        gainNode.gain.setValueAtTime(0, t0);
+        gainNode.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+        gainNode.gain.setValueAtTime(vol, t0 + 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, t0 + VOLUME_TONE_DURATION_SECONDS);
 
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.18);
+        oscillator.start(t0);
+        oscillator.stop(t0 + VOLUME_TONE_DURATION_SECONDS);
       }
 
       function playCompletionSound() {
@@ -809,7 +811,7 @@
 
       // LocalStorage
       function saveState() {
-        if (state.phase !== 'idle' && state.phase !== 'completed' && state.phase !== 'interrupted') {
+        if (state.phase !== 'idle' && state.phase !== 'completed') {
           localStorage.setItem('workoutState', JSON.stringify(state));
         } else {
           localStorage.removeItem('workoutState');
@@ -1190,7 +1192,7 @@
         const value = parseInt(e.target.value);
         updateVolume(value);
         const now = Date.now();
-        if (now - lastVolumeToneTime >= VOLUME_TONE_THROTTLE_MS) {
+        if (now - lastVolumeToneTime >= VOLUME_TONE_THROTTLE_MILLIS) {
           lastVolumeToneTime = now;
           playVolumePreviewTone();
         }

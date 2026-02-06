@@ -634,6 +634,32 @@
         oscillator.stop(audioContext.currentTime + 0.2);
       }
 
+      let lastVolumeToneTime = 0;
+      const VOLUME_TONE_THROTTLE_MS = 180; // >= tone duration to avoid overlap
+
+      function playVolumePreviewTone() {
+        initAudio();
+        const vol = speechVolume; // 0–1
+        if (vol < 0.01) return; // Skip if effectively muted
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(vol, audioContext.currentTime + 0.02);
+        gainNode.gain.setValueAtTime(vol, audioContext.currentTime + 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.18);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.18);
+      }
+
       function playCompletionSound() {
         initAudio();
         const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C (major chord)
@@ -1159,10 +1185,24 @@
         updateUI();
       });
 
-      // Volume slider event listener
-      elements.volumeSlider.addEventListener('input', (e) => {
+      // Volume slider event listeners (tone feedback while moving and when released)
+      function handleVolumeInput(e) {
+        const value = parseInt(e.target.value);
+        updateVolume(value);
+        const now = Date.now();
+        if (now - lastVolumeToneTime >= VOLUME_TONE_THROTTLE_MS) {
+          lastVolumeToneTime = now;
+          playVolumePreviewTone();
+        }
+      }
+
+      function handleVolumeChange(e) {
         updateVolume(parseInt(e.target.value));
-      });
+        playVolumePreviewTone(); // Always play when user releases
+      }
+
+      elements.volumeSlider.addEventListener('input', handleVolumeInput);
+      elements.volumeSlider.addEventListener('change', handleVolumeChange);
 
       // Voice selector event listeners
       elements.voiceSelect.addEventListener('change', handleVoiceChange);

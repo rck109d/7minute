@@ -75,6 +75,13 @@
         color: white;
       }
       
+      /* Hide audio toggle on desktop where controls are always visible */
+      @media (min-width: 641px) {
+        .audio-toggle {
+          display: none !important;
+        }
+      }
+
       /* Audio Controls (Voice & Volume) */
       .audio-controls {
         display: flex;
@@ -242,6 +249,8 @@
         background-color: var(--color-exercise);
         color: white;
         min-width: 120px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
       
       button:hover:not(:disabled) {
@@ -613,6 +622,9 @@
         if (!audioContext) {
           audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
       }
 
       // Sound Effects
@@ -702,16 +714,24 @@
 
       // Volume Functions
       function saveVolume() {
-        localStorage.setItem('speechVolume', speechVolume.toString());
+        try {
+          localStorage.setItem('speechVolume', speechVolume.toString());
+        } catch (e) {
+          // Ignore silently when running locally
+        }
       }
 
       function loadVolume() {
-        const saved = localStorage.getItem('speechVolume');
-        if (saved) {
-          speechVolume = parseFloat(saved);
-          const percentage = Math.round(speechVolume * 100);
-          elements.volumeSlider.value = percentage;
-          elements.volumeValue.textContent = `${percentage}%`;
+        try {
+          const saved = localStorage.getItem('speechVolume');
+          if (saved) {
+            speechVolume = parseFloat(saved);
+            const percentage = Math.round(speechVolume * 100);
+            elements.volumeSlider.value = percentage;
+            elements.volumeValue.textContent = `${percentage}%`;
+          }
+        } catch (e) {
+          // Ignore silently when running locally
         }
       }
 
@@ -742,7 +762,13 @@
         }
         
         // Save current selection before rebuilding
-        const currentSelectedName = selectedVoice ? selectedVoice.name : localStorage.getItem('workoutVoice');
+        let savedVoiceName = null;
+        try {
+          savedVoiceName = localStorage.getItem('workoutVoice');
+        } catch (e) {
+          // Ignore silently when running locally
+        }
+        const currentSelectedName = selectedVoice ? selectedVoice.name : savedVoiceName;
         
         // Update available voices
         availableVoices = voices;
@@ -764,12 +790,23 @@
 
       function saveVoicePreference() {
         if (selectedVoice) {
-          localStorage.setItem('workoutVoice', selectedVoice.name);
+          try {
+            localStorage.setItem('workoutVoice', selectedVoice.name);
+          } catch (e) {
+            // Ignore silently when running locally
+          }
         }
       }
 
       function loadVoicePreference(preferredVoiceName) {
-        const savedVoiceName = preferredVoiceName || localStorage.getItem('workoutVoice');
+        let savedVoiceName = preferredVoiceName;
+        if (!savedVoiceName) {
+          try {
+            savedVoiceName = localStorage.getItem('workoutVoice');
+          } catch (e) {
+            // Ignore silently when running locally
+          }
+        }
         
         if (savedVoiceName) {
           const voiceIndex = availableVoices.findIndex(v => v.name === savedVoiceName);
@@ -811,23 +848,35 @@
 
       // LocalStorage
       function saveState() {
-        if (state.phase !== 'idle' && state.phase !== 'completed') {
-          localStorage.setItem('workoutState', JSON.stringify(state));
-        } else {
-          localStorage.removeItem('workoutState');
+        try {
+          if (state.phase !== 'idle' && state.phase !== 'completed') {
+            localStorage.setItem('workoutState', JSON.stringify(state));
+          } else {
+            localStorage.removeItem('workoutState');
+          }
+        } catch (e) {
+          // Ignore silently when running locally
         }
       }
 
       function loadState() {
-        const saved = localStorage.getItem('workoutState');
-        if (saved) {
-          return JSON.parse(saved);
+        try {
+          const saved = localStorage.getItem('workoutState');
+          if (saved) {
+            return JSON.parse(saved);
+          }
+        } catch (e) {
+          // Ignore silently when running locally
         }
         return null;
       }
 
       function clearSavedState() {
-        localStorage.removeItem('workoutState');
+        try {
+          localStorage.removeItem('workoutState');
+        } catch (e) {
+          // Ignore silently when running locally
+        }
       }
 
       // UI Updates
@@ -862,6 +911,7 @@
       // Create the exercise list structure once (called only on init)
       function renderExerciseList() {
         elements.exerciseList.innerHTML = '';
+        elements.exerciseItems = []; // Cache list items for performance
         EXERCISES.forEach((exercise, index) => {
           // Create exercise button
           const item = document.createElement('button');
@@ -876,6 +926,7 @@
           });
           
           elements.exerciseList.appendChild(item);
+          elements.exerciseItems.push(item);
         });
       }
       
@@ -898,39 +949,42 @@
           elements.statusBadgeDisplay.className = 'status-badge-display';
         }
         
-        // Update exercise buttons
-        const exerciseItems = elements.exerciseList.querySelectorAll('.exercise-item');
-        
-        exerciseItems.forEach((exerciseItem, index) => {
-          // Reset all classes
-          exerciseItem.className = 'exercise-item';
-          
-          // Update exercise button state
-          if (state.phase !== 'idle') {
-            if (state.completedExercises.includes(index)) {
-              exerciseItem.classList.add('completed');
-            }
-            if (index === state.currentExerciseIndex) {
-              // Apply class based on current phase
-              if (state.phase === 'rest') {
-                exerciseItem.classList.add('current-rest');
-              } else if (state.phase === 'ready') {
-                exerciseItem.classList.add('current-ready');
-              } else if (state.phase === 'exercise') {
-                exerciseItem.classList.add('current-exercise');
-              } else if (state.phase === 'paused' && state.previousPhase) {
-                // For paused, use the previousPhase color
-                if (state.previousPhase === 'rest') {
-                  exerciseItem.classList.add('current-rest');
-                } else if (state.previousPhase === 'ready') {
-                  exerciseItem.classList.add('current-ready');
-                } else if (state.previousPhase === 'exercise') {
-                  exerciseItem.classList.add('current-exercise');
+        // Update exercise buttons without thrashing DOM layouts
+        if (elements.exerciseItems) {
+          elements.exerciseItems.forEach((exerciseItem, index) => {
+            let targetClass = 'exercise-item';
+            
+            // Update exercise button state
+            if (state.phase !== 'idle') {
+              if (state.completedExercises.includes(index)) {
+                targetClass += ' completed';
+              }
+              if (index === state.currentExerciseIndex) {
+                // Apply class based on current phase
+                if (state.phase === 'rest') {
+                  targetClass += ' current-rest';
+                } else if (state.phase === 'ready') {
+                  targetClass += ' current-ready';
+                } else if (state.phase === 'exercise') {
+                  targetClass += ' current-exercise';
+                } else if (state.phase === 'paused' && state.previousPhase) {
+                  // For paused, use the previousPhase color
+                  if (state.previousPhase === 'rest') {
+                    targetClass += ' current-rest';
+                  } else if (state.previousPhase === 'ready') {
+                    targetClass += ' current-ready';
+                  } else if (state.previousPhase === 'exercise') {
+                    targetClass += ' current-exercise';
+                  }
                 }
               }
             }
-          }
-        });
+            // Only update DOM class string if it changed
+            if (exerciseItem.className !== targetClass) {
+              exerciseItem.className = targetClass;
+            }
+          });
+        }
       }
 
       // Jump to a specific exercise
@@ -964,9 +1018,18 @@
           clearInterval(timerInterval);
         }
         
+        // Precise timer tracking to prevent intervals drifting during background/battery-saving
+        const startTime = Date.now();
+        const initialTimeRemaining = state.timeRemaining;
+        let lastReportedTime = initialTimeRemaining;
+        
         timerInterval = setInterval(() => {
-          if (state.timeRemaining > 0) {
-            state.timeRemaining--;
+          const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+          const newTimeRemaining = Math.max(0, initialTimeRemaining - elapsedSeconds);
+          
+          if (newTimeRemaining !== lastReportedTime && state.timeRemaining > 0) {
+            state.timeRemaining = newTimeRemaining;
+            lastReportedTime = newTimeRemaining;
             
             // Halfway announcement (only during exercise phase)
             if (state.phase === 'exercise' && state.timeRemaining === 15) {
@@ -983,12 +1046,15 @@
               playWhistle();
             }
             
-            updateUI(); // No full render - just update timer
+            // Efficient timer text update, bypassing heavy UI refresh
+            elements.timerDisplay.textContent = state.timeRemaining;
             saveState();
-          } else {
+          }
+          
+          if (state.timeRemaining <= 0) {
             advancePhase();
           }
-        }, 1000);
+        }, 100); // Check 10 times a second
       }
 
       function stopTimer() {
@@ -1149,6 +1215,7 @@
 
       // Play/Pause button handler
       function handlePlayPause() {
+        initAudio(); // Assure audio is initialized immediately on user interaction
         if (state.phase === 'idle' || state.phase === 'completed') {
           startWorkout();
         } else if (state.phase === 'paused') {
@@ -1216,17 +1283,6 @@
         }
       });
 
-      // Pause workout when window/tab loses focus
-      function handleFocusLoss() {
-        if (state.phase === 'exercise' || state.phase === 'rest') {
-          pauseWorkout();
-        }
-      }
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') handleFocusLoss();
-      });
-      window.addEventListener('blur', handleFocusLoss); // Catches Alt+Tab, clicking another app
-
       // Initialize voices
       speechSynthesis.addEventListener('voiceschanged', loadVoices);
       
@@ -1253,7 +1309,11 @@
 
       // Save state before page unload
       window.addEventListener('beforeunload', () => {
-        saveState();
+        try {
+          saveState();
+        } catch (e) {
+          // Ignore silently on unload
+        }
       });
     </script>
   </body>
